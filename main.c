@@ -16,7 +16,7 @@
         printf("[0] SAIR DO SISTEMA\n");
         scanf("%d", &escolha);
 
-        if (escolha != 1 || 2 || 3 || 0){
+        if (escolha != 1 && escolha != 2 && escolha != 3 && escolha != 0){
             printf(erro);
         }
     } while (escolha != 0);
