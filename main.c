@@ -4,14 +4,14 @@
  *  Módulos: Cliente | Produto/Estoque | Pedido/Movimentação
  * ============================================================
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <locale.h>
- 
+
 /* ==================== CORES ANSI ========================== */
 #define RED    "\x1b[31m"
 #define YELLOW "\x1b[33m"
@@ -19,10 +19,10 @@
 #define CYAN   "\x1b[36m"
 #define BOLD   "\x1b[1m"
 #define RESET  "\x1b[0m"
- 
+
 /* ==================== VERSÃO ============================== */
 #define VERSAO "1.0.0"
- 
+
 /* ==================== CONSTANTES — CLIENTE ================ */
 #define MAX_NOME_CLI   80
 #define MAX_CPF        15
@@ -35,7 +35,7 @@
 #define MAX_OBS_CLI   200
 #define ARQ_CLIENTES  "clientes.dat"
 #define ARQ_CLI_TXT   "clientes_export.txt"
- 
+
 /* ==================== CONSTANTES — PRODUTO ================ */
 #define MAX_NOME_PROD  60
 #define MAX_CATEGORIA  35
@@ -46,12 +46,12 @@
 #define ARQ_PROD_TXT  "produtos_export.txt"
 #define LIMITE_CRITICO 3
 #define LIMITE_ATENCAO 7
- 
+
 /* ==================== CONSTANTES — PEDIDO ================= */
 #define MAX_ITENS_PEDIDO 20
 #define MAX_PEDIDOS      200
 #define ARQ_PEDIDOS      "pedidos.dat"
- 
+
 /* ==================== ESTRUTURA — CLIENTE ================= */
 typedef struct {
     int   codigo;
@@ -75,7 +75,7 @@ typedef struct {
     char  data_cadastro[20];
     char  observacoes[MAX_OBS_CLI];
 } Cliente;
- 
+
 /* ==================== ESTRUTURA — PRODUTO ================= */
 typedef struct {
     int   codigo;
@@ -93,7 +93,7 @@ typedef struct {
     char  data_cadastro[20];
     char  observacoes[MAX_OBS_PROD];
 } Produto;
- 
+
 /* ==================== ESTRUTURA — MOVIMENTAÇÃO ============ */
 typedef struct {
     int  codigo_produto;
@@ -101,7 +101,7 @@ typedef struct {
     int  quantidade;
     char data_hora[25];
 } Movimentacao;
- 
+
 /* ==================== ESTRUTURA — ITEM DE PEDIDO ========== */
 typedef struct {
     int   codigo_produto;
@@ -110,7 +110,7 @@ typedef struct {
     float preco_unitario;
     float subtotal;
 } ItemPedido;
- 
+
 /* ==================== ESTRUTURA — PEDIDO ================== */
 typedef struct {
     int        numero;
@@ -125,11 +125,11 @@ typedef struct {
     char       data_hora[25];
     int        status; /* 0=Cancelado 1=Aberto 2=Finalizado */
 } Pedido;
- 
+
 /* ============================================================
  *  UTILITÁRIOS COMPARTILHADOS
  * ============================================================ */
- 
+
 void limpar_tela(void) {
 #ifdef _WIN32
     system("cls");
@@ -137,17 +137,17 @@ void limpar_tela(void) {
     system("clear");
 #endif
 }
- 
+
 void pausar(void) {
     printf("\n Pressione ENTER para continuar...");
     getchar();
 }
- 
+
 void limpar_buffer(void) {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
- 
+
 void ler_string(const char *prompt, char *dest, int max) {
     printf("%s", prompt);
     fgets(dest, max, stdin);
@@ -155,24 +155,133 @@ void ler_string(const char *prompt, char *dest, int max) {
     if (len > 0 && dest[len - 1] == '\n')
         dest[len - 1] = '\0';
 }
- 
+
 void data_hoje(char *buf) {
     time_t t = time(NULL);
     struct tm *tm_info = localtime(&t);
     strftime(buf, 20, "%d/%m/%Y %H:%M", tm_info);
 }
- 
+
 void data_hora_agora(char *buf) {
     time_t t = time(NULL);
     struct tm *tm_info = localtime(&t);
     strftime(buf, 25, "%d/%m/%Y %H:%M:%S", tm_info);
 }
- 
+
 static void sep_txt(FILE *f, char c, int n) {
     for (int i = 0; i < n; i++) fputc(c, f);
     fputc('\n', f);
 }
- 
+
+/* Lê somente dígitos numéricos com quantidade EXATA de caracteres.
+   Se digitos_exatos == 0, aceita qualquer quantidade (campo livre).    */
+void ler_numeros_exatos(const char *prompt, char *dest, int max, int digitos_exatos) {
+    char buf[256];
+    while (1) {
+        printf("%s", prompt);
+        fgets(buf, sizeof(buf), stdin);
+        int len = strlen(buf);
+        if (len > 0 && buf[len-1] == '\n') buf[--len] = '\0';
+
+        if (len == 0) {
+            printf(" Campo obrigatorio! Digite apenas numeros.\n");
+            continue;
+        }
+
+        int valido = 1;
+        for (int i = 0; i < len; i++) {
+            if (!isdigit((unsigned char)buf[i])) { valido = 0; break; }
+        }
+        if (!valido) {
+            printf(" Apenas numeros sao permitidos neste campo!\n");
+            continue;
+        }
+
+        if (digitos_exatos > 0 && len != digitos_exatos) {
+            printf(" Quantidade incorreta! Este campo exige exatamente %d digito(s). "
+                   "Voce digitou %d.\n", digitos_exatos, len);
+            continue;
+        }
+
+        strncpy(dest, buf, max - 1);
+        dest[max - 1] = '\0';
+        return;
+    }
+}
+
+/* Lê um inteiro >= 0, rejeitando negativos e texto */
+int ler_inteiro_positivo(const char *prompt) {
+    int val;
+    while (1) {
+        printf("%s", prompt);
+        if (scanf("%d", &val) == 1) {
+            limpar_buffer();
+            if (val >= 0) return val;
+            printf(" Valor nao pode ser negativo!\n");
+        } else {
+            limpar_buffer();
+            printf(" Entrada invalida! Digite um numero inteiro.\n");
+        }
+    }
+}
+
+/* Lê um float > 0, rejeitando negativos e texto */
+float ler_float_positivo(const char *prompt) {
+    float val;
+    while (1) {
+        printf("%s", prompt);
+        if (scanf("%f", &val) == 1) {
+            limpar_buffer();
+            if (val >= 0.0f) return val;
+            printf(" Valor nao pode ser negativo!\n");
+        } else {
+            limpar_buffer();
+            printf(" Entrada invalida! Digite um numero.\n");
+        }
+    }
+}
+
+/* Lê e valida data DD MM AAAA — rejeita datas no passado */
+void ler_data_validade(int *dia, int *mes, int *ano) {
+    while (1) {
+        printf(" Data de validade (DD MM AAAA): ");
+        if (scanf("%d %d %d", dia, mes, ano) != 3) {
+            limpar_buffer();
+            printf(" Formato invalido! Use DD MM AAAA (ex: 25 12 2026).\n");
+            continue;
+        }
+        limpar_buffer();
+
+        /* Verifica intervalo básico */
+        if (*dia < 1 || *dia > 31 || *mes < 1 || *mes > 12 || *ano < 2000) {
+            printf(" Data invalida! Verifique dia (1-31), mes (1-12) e ano (>= 2000).\n");
+            continue;
+        }
+
+        /* Verifica se a data é futura usando mktime */
+        struct tm t = {0};
+        t.tm_mday  = *dia;
+        t.tm_mon   = *mes - 1;
+        t.tm_year  = *ano - 1900;
+        t.tm_hour  = 23; t.tm_min = 59; t.tm_sec = 59;
+        time_t val = mktime(&t);
+
+        /* mktime normaliza — se dia/mes ficaram iguais, data era válida */
+        if (t.tm_mday != *dia || t.tm_mon != (*mes - 1)) {
+            printf(" Data invalida! Esse dia nao existe nesse mes.\n");
+            continue;
+        }
+
+        if (difftime(val, time(NULL)) < 0) {
+            printf(" " YELLOW "Atencao: data já passou — produto sera marcado como VENCIDO." RESET "\n");
+            printf(" Deseja usar essa data mesmo assim? [S/N]: ");
+            char c; scanf(" %c", &c); limpar_buffer();
+            if (toupper(c) != 'S') continue;
+        }
+        return;
+    }
+}
+
 void formatar_cpf(const char *entrada, char *saida) {
     char digits[12] = {0};
     int j = 0;
@@ -188,11 +297,11 @@ void formatar_cpf(const char *entrada, char *saida) {
     else
         strcpy(saida, entrada);
 }
- 
+
 /* ============================================================
  *  MÓDULO CLIENTE
  * ============================================================ */
- 
+
 int cli_proximo_codigo(void) {
     FILE *f = fopen(ARQ_CLIENTES, "rb");
     if (!f) return 1;
@@ -203,7 +312,7 @@ int cli_proximo_codigo(void) {
     fclose(f);
     return max + 1;
 }
- 
+
 int cli_total_registros(void) {
     FILE *f = fopen(ARQ_CLIENTES, "rb");
     if (!f) return 0;
@@ -212,7 +321,7 @@ int cli_total_registros(void) {
     fclose(f);
     return (int)(tam / sizeof(Cliente));
 }
- 
+
 int cli_buscar_por_codigo(int codigo, Cliente *dest) {
     FILE *f = fopen(ARQ_CLIENTES, "rb");
     if (!f) return 0;
@@ -227,7 +336,7 @@ int cli_buscar_por_codigo(int codigo, Cliente *dest) {
     fclose(f);
     return 0;
 }
- 
+
 void cli_exibir_ficha(const Cliente *c) {
     printf("\n ╔══════════════════════════════════════════════════════╗\n");
     printf(" ║ FICHA DO CLIENTE — Cód: %-5d Status: %-8s  ║\n",
@@ -256,70 +365,80 @@ void cli_exibir_ficha(const Cliente *c) {
         printf(" ║ Obs.       : %-38s ║\n", c->observacoes);
     printf(" ╚══════════════════════════════════════════════════════╝\n");
 }
- 
+
 void cadastrar_cliente(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║       CADASTRO DE NOVO CLIENTE           ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
- 
+
     Cliente c;
     memset(&c, 0, sizeof(Cliente));
     c.codigo = cli_proximo_codigo();
     c.ativo  = 1;
     data_hoje(c.data_cadastro);
- 
+
     printf(" Código gerado automaticamente: %d\n\n", c.codigo);
- 
+
     printf(" Tipo de cliente:\n [1] Pessoa Física\n [2] Pessoa Jurídica\n Opção: ");
     scanf("%d", &c.tipo);
     limpar_buffer();
     if (c.tipo != 1 && c.tipo != 2) c.tipo = 1;
- 
+
     printf("\n --- DADOS PESSOAIS ---\n");
-    ler_string(" Nome completo        : ", c.nome, MAX_NOME_CLI);
-    if (strlen(c.nome) == 0) {
-        printf(" Nome é obrigatório!\n"); pausar(); return;
-    }
- 
+    do {
+        ler_string(" Nome completo        : ", c.nome, MAX_NOME_CLI);
+        if (strlen(c.nome) == 0) printf(" Nome e obrigatorio!\n");
+    } while (strlen(c.nome) == 0);
+
     if (c.tipo == 1) {
         char cpf_raw[MAX_CPF];
-        ler_string(" CPF (somente números): ", cpf_raw, MAX_CPF);
+        ler_numeros_exatos(" CPF (11 digitos, somente numeros)          : ", cpf_raw, MAX_CPF, 11);
         formatar_cpf(cpf_raw, c.cpf);
-        ler_string(" RG                   : ", c.rg, MAX_CPF);
-        ler_string(" Data de nascimento   : ", c.data_nascimento, 12);
+        ler_numeros_exatos(" RG  (7 a 9 digitos — ex: 1234567)          : ", c.rg, MAX_CPF, 0);
+        ler_numeros_exatos(" Data nasc. (8 digitos DDMMAAAA, ex:01011990): ", c.data_nascimento, 12, 8);
     } else {
-        ler_string(" CNPJ                 : ", c.cpf, MAX_CPF);
-        ler_string(" Inscrição Estadual   : ", c.rg, MAX_CPF);
+        ler_numeros_exatos(" CNPJ (14 digitos, somente numeros)          : ", c.cpf, MAX_CPF, 14);
+        ler_numeros_exatos(" Inscricao Estadual (somente numeros)        : ", c.rg, MAX_CPF, 0);
     }
- 
+
     printf("\n --- CONTATO ---\n");
-    ler_string(" E-mail   : ", c.email,    MAX_EMAIL);
-    ler_string(" Telefone : ", c.telefone, MAX_TELEFONE);
-    ler_string(" Celular  : ", c.celular,  MAX_TELEFONE);
- 
+    ler_string(" E-mail   : ", c.email, MAX_EMAIL);
+    ler_numeros_exatos(" Telefone fixo (10 digitos, ex: 8133334444): ", c.telefone, MAX_TELEFONE, 10);
+    ler_numeros_exatos(" Celular   (11 digitos, ex: 81988887777)   : ", c.celular,  MAX_TELEFONE, 11);
+
     printf("\n --- ENDEREÇO ---\n");
-    ler_string(" Logradouro  : ", c.endereco,   MAX_ENDERECO);
-    ler_string(" Número      : ", c.numero,     10);
-    ler_string(" Complemento : ", c.complemento,40);
-    ler_string(" Bairro      : ", c.bairro,     50);
-    ler_string(" Cidade      : ", c.cidade,     MAX_CIDADE);
-    ler_string(" Estado (UF) : ", c.estado,     MAX_ESTADO);
-    ler_string(" CEP         : ", c.cep,        MAX_CEP);
- 
+    do {
+        ler_string(" Logradouro  : ", c.endereco, MAX_ENDERECO);
+        if (strlen(c.endereco) == 0) printf(" Logradouro e obrigatorio!\n");
+    } while (strlen(c.endereco) == 0);
+    ler_string(" Número      : ", c.numero,      10);
+    ler_string(" Complemento : ", c.complemento, 40);
+    do {
+        ler_string(" Bairro      : ", c.bairro, 50);
+        if (strlen(c.bairro) == 0) printf(" Bairro e obrigatorio!\n");
+    } while (strlen(c.bairro) == 0);
+    do {
+        ler_string(" Cidade      : ", c.cidade, MAX_CIDADE);
+        if (strlen(c.cidade) == 0) printf(" Cidade e obrigatoria!\n");
+    } while (strlen(c.cidade) == 0);
+    do {
+        ler_string(" Estado (UF) : ", c.estado, MAX_ESTADO);
+        if (strlen(c.estado) == 0) printf(" Estado e obrigatorio!\n");
+    } while (strlen(c.estado) == 0);
+    ler_numeros_exatos(" CEP (8 digitos, somente numeros, ex: 50000000): ", c.cep, MAX_CEP, 8);
+
     printf("\n --- FINANCEIRO ---\n");
-    printf(" Limite de crédito (R$): ");
-    scanf("%f", &c.limite_credito);
-    limpar_buffer();
- 
+    c.limite_credito = ler_float_positivo(" Limite de credito (R$): ");
+
     printf("\n --- OBSERVAÇÕES ---\n");
     ler_string(" Observações: ", c.observacoes, MAX_OBS_CLI);
- 
+
     printf("\n Confirmar cadastro? [S/N]: ");
     char conf;
     scanf(" %c", &conf);
     limpar_buffer();
- 
+
     if (toupper(conf) == 'S') {
         FILE *f = fopen(ARQ_CLIENTES, "ab");
         if (!f) { printf(" ERRO ao abrir arquivo!\n"); pausar(); return; }
@@ -331,7 +450,7 @@ void cadastrar_cliente(void) {
     }
     pausar();
 }
- 
+
 void listar_clientes(int apenas_ativos) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════════════════════════╗\n");
@@ -339,14 +458,14 @@ void listar_clientes(int apenas_ativos) {
     printf(" ╠═══════╦══════════════════════════════╦══════════════╦═════════╣\n");
     printf(" ║ CÓD.  ║ NOME                         ║ CPF/CNPJ     ║ STATUS  ║\n");
     printf(" ╠═══════╬══════════════════════════════╬══════════════╬═════════╣\n");
- 
+
     FILE *f = fopen(ARQ_CLIENTES, "rb");
     if (!f) {
         printf(" ║ Nenhum registro encontrado.                                  ║\n");
         printf(" ╚══════════════════════════════════════════════════════════════╝\n");
         pausar(); return;
     }
- 
+
     Cliente c; int count = 0;
     while (fread(&c, sizeof(Cliente), 1, f) == 1) {
         if (apenas_ativos && !c.ativo) continue;
@@ -360,7 +479,7 @@ void listar_clientes(int apenas_ativos) {
     printf(" Total: %d cliente(s).\n", count);
     pausar();
 }
- 
+
 void consultar_cliente(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
@@ -368,10 +487,10 @@ void consultar_cliente(void) {
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" Buscar por:\n [1] Código\n [2] Nome\n [3] CPF/CNPJ\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
- 
+
     FILE *f = fopen(ARQ_CLIENTES, "rb");
     if (!f) { printf("\n Nenhum registro encontrado.\n"); pausar(); return; }
- 
+
     int encontrou = 0; Cliente c;
     if (op == 1) {
         printf(" Código: "); int cod; scanf("%d", &cod); limpar_buffer();
@@ -398,30 +517,38 @@ void consultar_cliente(void) {
     if (!encontrou) printf("\n Nenhum cliente encontrado.\n");
     pausar();
 }
- 
+
 void editar_cliente(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║            EDITAR CLIENTE                ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" Código do cliente: "); int cod; scanf("%d", &cod); limpar_buffer();
- 
+
     Cliente c;
     if (!cli_buscar_por_codigo(cod, &c)) { printf(" Cliente não encontrado!\n"); pausar(); return; }
     cli_exibir_ficha(&c);
- 
+
     printf("\n [1] Nome  [2] CPF/CNPJ  [3] Contato  [4] Endereço\n");
     printf(" [5] Limite de crédito  [6] Observações  [7] Status\n");
     printf(" [0] Cancelar\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
- 
+
     switch (op) {
         case 1: ler_string(" Novo nome: ", c.nome, MAX_NOME_CLI); break;
-        case 2: ler_string(" Novo CPF/CNPJ: ", c.cpf, MAX_CPF); break;
+        case 2:
+            if (c.tipo == 1) {
+                char cpf_raw[MAX_CPF];
+                ler_numeros_exatos(" Novo CPF (11 digitos): ", cpf_raw, MAX_CPF, 11);
+                formatar_cpf(cpf_raw, c.cpf);
+            } else {
+                ler_numeros_exatos(" Novo CNPJ (14 digitos): ", c.cpf, MAX_CPF, 14);
+            }
+            break;
         case 3:
-            ler_string(" Novo e-mail  : ", c.email,    MAX_EMAIL);
-            ler_string(" Novo telefone: ", c.telefone, MAX_TELEFONE);
-            ler_string(" Novo celular : ", c.celular,  MAX_TELEFONE);
+            ler_string(" Novo e-mail  : ", c.email, MAX_EMAIL);
+            ler_numeros_exatos(" Novo telefone fixo (10 digitos): ", c.telefone, MAX_TELEFONE, 10);
+            ler_numeros_exatos(" Novo celular       (11 digitos): ", c.celular,  MAX_TELEFONE, 11);
             break;
         case 4:
             ler_string(" Logradouro  : ", c.endereco,    MAX_ENDERECO);
@@ -443,7 +570,7 @@ void editar_cliente(void) {
             break;
         default: printf(" Cancelado.\n"); pausar(); return;
     }
- 
+
     FILE *f = fopen(ARQ_CLIENTES, "r+b");
     if (!f) { printf(" ERRO ao abrir arquivo!\n"); pausar(); return; }
     Cliente tmp;
@@ -458,21 +585,21 @@ void editar_cliente(void) {
     printf("\n " GREEN "✔ Dados atualizados!" RESET "\n");
     pausar();
 }
- 
+
 void excluir_cliente(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║      EXCLUIR / INATIVAR CLIENTE          ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" Código do cliente: "); int cod; scanf("%d", &cod); limpar_buffer();
- 
+
     Cliente c;
     if (!cli_buscar_por_codigo(cod, &c)) { printf(" Cliente não encontrado!\n"); pausar(); return; }
     cli_exibir_ficha(&c);
- 
+
     printf("\n [1] Inativar (recomendado)  [2] Excluir definitivamente  [0] Cancelar\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
- 
+
     if (op == 1) {
         c.ativo = 0;
         FILE *f = fopen(ARQ_CLIENTES, "r+b");
@@ -509,7 +636,7 @@ void excluir_cliente(void) {
     }
     pausar();
 }
- 
+
 /* --- Grava a ficha completa de um cliente no arquivo .txt --- */
 static void cli_ficha_para_txt(FILE *f, const Cliente *c) {
     sep_txt(f, '=', 62);
@@ -547,7 +674,7 @@ static void cli_ficha_para_txt(FILE *f, const Cliente *c) {
     sep_txt(f, '=', 62);
     fputc('\n', f);
 }
- 
+
 void exportar_clientes_txt(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
@@ -561,17 +688,17 @@ void exportar_clientes_txt(void) {
     printf(" Opcao: ");
     int op; scanf("%d", &op); limpar_buffer();
     if (op == 0) return;
- 
+
     FILE *dat = fopen(ARQ_CLIENTES, "rb");
     if (!dat) {
         printf("\n Nenhum registro encontrado. Cadastre clientes primeiro.\n");
         pausar(); return;
     }
- 
+
     char nome_saida[80];
     strcpy(nome_saida, ARQ_CLI_TXT);
     char agora[20]; data_hoje(agora);
- 
+
     /* ---- Opção 1: ficha individual ---- */
     if (op == 1) {
         printf(" Codigo do cliente: "); int cod; scanf("%d", &cod); limpar_buffer();
@@ -580,7 +707,7 @@ void exportar_clientes_txt(void) {
             if (c.codigo == cod) { achou = 1; break; }
         fclose(dat);
         if (!achou) { printf("\n Cliente nao encontrado.\n"); pausar(); return; }
- 
+
         sprintf(nome_saida, "ficha_cli_%03d.txt", c.codigo);
         FILE *txt = fopen(nome_saida, "w");
         if (!txt) { printf("\n ERRO ao criar arquivo!\n"); pausar(); return; }
@@ -591,11 +718,11 @@ void exportar_clientes_txt(void) {
         printf("\n " GREEN "Arquivo gerado: %s" RESET "\n", nome_saida);
         pausar(); return;
     }
- 
+
     /* ---- Opções 2 e 3: todos os registros ---- */
     FILE *txt = fopen(nome_saida, "w");
     if (!txt) { fclose(dat); printf("\n ERRO ao criar arquivo!\n"); pausar(); return; }
- 
+
     /* ---- Opção 2: lista em tabela ---- */
     if (op == 2) {
         fprintf(txt, "SISTEMA DE CADASTRO DE CLIENTES v%s\n", VERSAO);
@@ -625,7 +752,7 @@ void exportar_clientes_txt(void) {
         fprintf(txt, " RELATORIO GERENCIAL COMPLETO\n");
         fprintf(txt, " Gerado em: %s\n", agora);
         fprintf(txt, "================================================================\n\n");
- 
+
         int total=0,ativos=0,inativos=0,pf=0,pj=0;
         float lim_total=0.0f, lim_max=0.0f;
         char nome_maior[MAX_NOME_CLI] = "";
@@ -657,21 +784,21 @@ void exportar_clientes_txt(void) {
         while (fread(&c, sizeof(Cliente), 1, dat) == 1)
             cli_ficha_para_txt(txt, &c);
     }
- 
+
     fclose(dat); fclose(txt);
     printf("\n " GREEN "Arquivo gerado: %s" RESET "\n", nome_saida);
     pausar();
 }
- 
+
 void relatorio_clientes(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║      RELATÓRIO — CLIENTES                ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
- 
+
     FILE *f = fopen(ARQ_CLIENTES, "rb");
     if (!f) { printf(" Nenhum registro.\n"); pausar(); return; }
- 
+
     int total=0,ativos=0,inativos=0,pf=0,pj=0;
     float lim_total=0.0f;
     Cliente c;
@@ -682,7 +809,7 @@ void relatorio_clientes(void) {
         lim_total += c.limite_credito;
     }
     fclose(f);
- 
+
     printf(" Total de clientes      : %d\n", total);
     printf(" Ativos                 : %d\n", ativos);
     printf(" Inativos               : %d\n", inativos);
@@ -693,11 +820,11 @@ void relatorio_clientes(void) {
         printf(" Limite médio (R$)      : %.2f\n", lim_total / total);
     pausar();
 }
- 
+
 /* ============================================================
  *  MÓDULO PRODUTO / ESTOQUE
  * ============================================================ */
- 
+
 int prod_calcular_dias(int dia, int mes, int ano) {
     time_t agora = time(NULL);
     struct tm t  = {0};
@@ -705,7 +832,7 @@ int prod_calcular_dias(int dia, int mes, int ano) {
     time_t validade = mktime(&t);
     return (int)(difftime(validade, agora) / 86400);
 }
- 
+
 void prod_classificar(Produto *p) {
     int dias = prod_calcular_dias(p->dia_val, p->mes_val, p->ano_val);
     p->dias_restantes = dias;
@@ -714,7 +841,7 @@ void prod_classificar(Produto *p) {
     else if (dias <= LIMITE_ATENCAO) p->prioridade = 2;
     else                             p->prioridade = 3;
 }
- 
+
 const char *prod_label(int p) {
     switch (p) {
         case 0: return "VENCIDO";
@@ -723,7 +850,7 @@ const char *prod_label(int p) {
         default: return "OK";
     }
 }
- 
+
 const char *prod_cor(int p) {
     switch (p) {
         case 0: return RED;
@@ -732,7 +859,7 @@ const char *prod_cor(int p) {
         default: return GREEN;
     }
 }
- 
+
 int prod_proximo_codigo(void) {
     FILE *f = fopen(ARQ_PRODUTOS, "rb");
     if (!f) return 1;
@@ -742,7 +869,7 @@ int prod_proximo_codigo(void) {
     fclose(f);
     return max + 1;
 }
- 
+
 int prod_total_registros(void) {
     FILE *f = fopen(ARQ_PRODUTOS, "rb");
     if (!f) return 0;
@@ -751,7 +878,7 @@ int prod_total_registros(void) {
     fclose(f);
     return (int)(tam / sizeof(Produto));
 }
- 
+
 int prod_buscar_por_codigo(int codigo, Produto *dest) {
     FILE *f = fopen(ARQ_PRODUTOS, "rb");
     if (!f) return 0;
@@ -762,7 +889,7 @@ int prod_buscar_por_codigo(int codigo, Produto *dest) {
     fclose(f);
     return 0;
 }
- 
+
 void registrar_movimentacao(int cod, const char *tipo, int qtd) {
     Movimentacao m;
     m.codigo_produto = cod;
@@ -775,12 +902,12 @@ void registrar_movimentacao(int cod, const char *tipo, int qtd) {
     fwrite(&m, sizeof(Movimentacao), 1, f);
     fclose(f);
 }
- 
+
 void prod_exibir_ficha(const Produto *p) {
     prod_classificar((Produto *)p);
     const char *cor = prod_cor(p->prioridade);
     const char *lbl = prod_label(p->prioridade);
- 
+
     printf("\n ╔══════════════════════════════════════════════════════╗\n");
     printf(" ║ FICHA DO PRODUTO — Cód: %-5d Status: %-8s  ║\n",
            p->codigo, p->ativo ? "ATIVO" : "INATIVO");
@@ -802,46 +929,53 @@ void prod_exibir_ficha(const Produto *p) {
         printf(" ║ Obs.       : %-38s ║\n", p->observacoes);
     printf(" ╚══════════════════════════════════════════════════════╝\n");
 }
- 
+
 void cadastrar_produto(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║       CADASTRO DE NOVO PRODUTO           ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
- 
+
     Produto p;
     memset(&p, 0, sizeof(Produto));
     p.codigo = prod_proximo_codigo();
     p.ativo  = 1;
     data_hoje(p.data_cadastro);
     printf(" Código gerado: %d\n\n", p.codigo);
- 
+
     printf(" --- IDENTIFICAÇÃO ---\n");
-    ler_string(" Nome do produto   : ", p.nome,      MAX_NOME_PROD);
-    if (strlen(p.nome) == 0) { printf(" Nome obrigatório!\n"); pausar(); return; }
-    ler_string(" Categoria         : ", p.categoria, MAX_CATEGORIA);
-    ler_string(" Unidade (UN/KG/L) : ", p.unidade,  MAX_UNIDADE);
-    printf(" Peso/Volume (por unidade): ");
-    scanf("%f", &p.peso_volume); limpar_buffer();
- 
+    do {
+        ler_string(" Nome do produto   : ", p.nome, MAX_NOME_PROD);
+        if (strlen(p.nome) == 0) printf(" Nome e obrigatorio!\n");
+    } while (strlen(p.nome) == 0);
+    do {
+        ler_string(" Categoria         : ", p.categoria, MAX_CATEGORIA);
+        if (strlen(p.categoria) == 0) printf(" Categoria e obrigatoria!\n");
+    } while (strlen(p.categoria) == 0);
+    do {
+        ler_string(" Unidade (UN/KG/L) : ", p.unidade, MAX_UNIDADE);
+        if (strlen(p.unidade) == 0) printf(" Unidade e obrigatoria!\n");
+    } while (strlen(p.unidade) == 0);
+    p.peso_volume = ler_float_positivo(" Peso/Volume (por unidade): ");
+
     printf("\n --- ESTOQUE ---\n");
-    printf(" Quantidade inicial: "); scanf("%d", &p.quantidade); limpar_buffer();
- 
+    p.quantidade = ler_inteiro_positivo(" Quantidade inicial: ");
+
     printf("\n --- PREÇOS ---\n");
-    printf(" Preço de custo (R$): "); scanf("%f", &p.preco_custo);  limpar_buffer();
-    printf(" Preço de venda (R$): "); scanf("%f", &p.preco_venda);  limpar_buffer();
- 
-    printf("\n --- VALIDADE (DD MM AAAA) ---\n");
-    printf(" Data: "); scanf("%d %d %d", &p.dia_val, &p.mes_val, &p.ano_val); limpar_buffer();
+    p.preco_custo = ler_float_positivo(" Preco de custo (R$): ");
+    p.preco_venda = ler_float_positivo(" Preco de venda (R$): ");
+
+    printf("\n --- VALIDADE ---\n");
+    ler_data_validade(&p.dia_val, &p.mes_val, &p.ano_val);
     prod_classificar(&p);
- 
+
     printf("\n --- OBSERVAÇÕES ---\n");
     ler_string(" Observações: ", p.observacoes, MAX_OBS_PROD);
- 
+
     prod_exibir_ficha(&p);
     printf("\n Confirmar cadastro? [S/N]: ");
     char conf; scanf(" %c", &conf); limpar_buffer();
- 
+
     if (toupper(conf) == 'S') {
         FILE *f = fopen(ARQ_PRODUTOS, "ab");
         if (!f) { printf(" ERRO!\n"); pausar(); return; }
@@ -854,20 +988,20 @@ void cadastrar_produto(void) {
     }
     pausar();
 }
- 
+
 void listar_produtos(int apenas_ativos) {
     limpar_tela();
     printf("\n ╔══════╦═══════════════════╦════════════════╦══════╦══════════╦══════════╗\n");
     printf(" ║ CÓD. ║ NOME              ║ CATEGORIA      ║ QTD  ║ VDA(R$)  ║ SITUAÇÃO ║\n");
     printf(" ╠══════╬═══════════════════╬════════════════╬══════╬══════════╬══════════╣\n");
- 
+
     FILE *f = fopen(ARQ_PRODUTOS, "rb");
     if (!f) {
         printf(" ║ Nenhum produto cadastrado.                                        ║\n");
         printf(" ╚══════╩═══════════════════╩════════════════╩══════╩══════════╩══════════╝\n");
         pausar(); return;
     }
- 
+
     Produto p; int count = 0;
     while (fread(&p, sizeof(Produto), 1, f) == 1) {
         if (apenas_ativos && !p.ativo) continue;
@@ -884,7 +1018,7 @@ void listar_produtos(int apenas_ativos) {
     printf(" Total: %d produto(s).\n", count);
     pausar();
 }
- 
+
 void consultar_produto(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
@@ -892,10 +1026,10 @@ void consultar_produto(void) {
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" [1] Código  [2] Nome  [3] Categoria\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
- 
+
     FILE *f = fopen(ARQ_PRODUTOS, "rb");
     if (!f) { printf("\n Nenhum registro.\n"); pausar(); return; }
- 
+
     int encontrou = 0; Produto p;
     if (op == 1) {
         printf(" Código: "); int cod; scanf("%d", &cod); limpar_buffer();
@@ -928,22 +1062,22 @@ void consultar_produto(void) {
     if (!encontrou) printf("\n Produto não encontrado.\n");
     pausar();
 }
- 
+
 void editar_produto(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║            EDITAR PRODUTO                ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" Código do produto: "); int cod; scanf("%d", &cod); limpar_buffer();
- 
+
     Produto p;
     if (!prod_buscar_por_codigo(cod, &p)) { printf(" Produto não encontrado!\n"); pausar(); return; }
     prod_classificar(&p); prod_exibir_ficha(&p);
- 
+
     printf("\n [1] Nome  [2] Categoria  [3] Unidade/Peso  [4] Preços\n");
     printf(" [5] Validade  [6] Observações  [7] Status  [0] Cancelar\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
- 
+
     switch (op) {
         case 1: ler_string(" Novo nome: ", p.nome, MAX_NOME_PROD); break;
         case 2: ler_string(" Categoria: ", p.categoria, MAX_CATEGORIA); break;
@@ -952,12 +1086,11 @@ void editar_produto(void) {
             printf(" Peso/Volume: "); scanf("%f", &p.peso_volume); limpar_buffer();
             break;
         case 4:
-            printf(" Custo (R$): "); scanf("%f", &p.preco_custo); limpar_buffer();
-            printf(" Venda (R$): "); scanf("%f", &p.preco_venda); limpar_buffer();
+            p.preco_custo = ler_float_positivo(" Custo (R$): ");
+            p.preco_venda = ler_float_positivo(" Venda (R$): ");
             break;
         case 5:
-            printf(" Validade (DD MM AAAA): ");
-            scanf("%d %d %d", &p.dia_val, &p.mes_val, &p.ano_val); limpar_buffer();
+            ler_data_validade(&p.dia_val, &p.mes_val, &p.ano_val);
             prod_classificar(&p);
             break;
         case 6: ler_string(" Observações: ", p.observacoes, MAX_OBS_PROD); break;
@@ -967,7 +1100,7 @@ void editar_produto(void) {
             break;
         default: printf(" Cancelado.\n"); pausar(); return;
     }
- 
+
     FILE *f = fopen(ARQ_PRODUTOS, "r+b");
     if (!f) { printf(" ERRO!\n"); pausar(); return; }
     Produto tmp;
@@ -983,21 +1116,21 @@ void editar_produto(void) {
     printf("\n " GREEN "✔ Produto atualizado!" RESET "\n");
     pausar();
 }
- 
+
 void excluir_produto(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║      EXCLUIR / INATIVAR PRODUTO          ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" Código: "); int cod; scanf("%d", &cod); limpar_buffer();
- 
+
     Produto p;
     if (!prod_buscar_por_codigo(cod, &p)) { printf(" Produto não encontrado!\n"); pausar(); return; }
     prod_classificar(&p); prod_exibir_ficha(&p);
- 
+
     printf("\n [1] Inativar  [2] Excluir definitivamente  [0] Cancelar\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
- 
+
     if (op == 1) {
         p.ativo = 0;
         FILE *f = fopen(ARQ_PRODUTOS, "r+b");
@@ -1033,14 +1166,14 @@ void excluir_produto(void) {
     }
     pausar();
 }
- 
+
 void movimentar_estoque(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║     MOVIMENTAR ESTOQUE (ENTRADA/SAÍDA)   ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
     printf(" Código do produto: "); int cod; scanf("%d", &cod); limpar_buffer();
- 
+
     Produto p;
     if (!prod_buscar_por_codigo(cod, &p)) { printf(" Produto não encontrado!\n"); pausar(); return; }
     prod_classificar(&p);
@@ -1048,10 +1181,11 @@ void movimentar_estoque(void) {
     printf(" [1] Entrada (+)  [2] Saída (-)  [0] Cancelar\n Opção: ");
     int op; scanf("%d", &op); limpar_buffer();
     if (op == 0) return;
- 
-    printf(" Quantidade: "); int qtd; scanf("%d", &qtd); limpar_buffer();
-    if (qtd <= 0) { printf(" Quantidade inválida!\n"); pausar(); return; }
- 
+
+    printf(" Quantidade: ");
+    int qtd = ler_inteiro_positivo(" Quantidade (> 0): ");
+    if (qtd <= 0) { printf(" Quantidade deve ser maior que zero!\n"); pausar(); return; }
+
     if (op == 1) {
         p.quantidade += qtd;
         registrar_movimentacao(cod, "ENTRADA", qtd);
@@ -1064,7 +1198,7 @@ void movimentar_estoque(void) {
         registrar_movimentacao(cod, "SAIDA", qtd);
         printf("\n " GREEN "✔ Saída! Novo saldo: %d %s" RESET "\n", p.quantidade, p.unidade);
     } else { printf(" Opção inválida.\n"); pausar(); return; }
- 
+
     FILE *f = fopen(ARQ_PRODUTOS, "r+b");
     if (!f) { printf(" ERRO ao salvar!\n"); pausar(); return; }
     Produto tmp;
@@ -1078,16 +1212,16 @@ void movimentar_estoque(void) {
     fclose(f);
     pausar();
 }
- 
+
 void relatorio_produtos(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║       RELATÓRIO — PRODUTOS               ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
- 
+
     FILE *f = fopen(ARQ_PRODUTOS, "rb");
     if (!f) { printf(" Nenhum registro.\n"); pausar(); return; }
- 
+
     int total=0,ativos=0,inativos=0,vencidos=0,criticos=0,atencao=0,ok=0;
     float v_custo=0.0f, v_venda=0.0f;
     Produto p;
@@ -1102,7 +1236,7 @@ void relatorio_produtos(void) {
         v_venda += p.preco_venda * p.quantidade;
     }
     fclose(f);
- 
+
     printf(" Total de produtos       : %d\n", total);
     printf(" Ativos                  : %d\n", ativos);
     printf(" Inativos                : %d\n\n", inativos);
@@ -1116,7 +1250,7 @@ void relatorio_produtos(void) {
         printf(" Margem bruta estimada   : R$ %.2f\n", v_venda - v_custo);
     pausar();
 }
- 
+
 /* --- Grava a ficha completa de um produto no arquivo .txt --- */
 static void prod_ficha_para_txt(FILE *f, const Produto *p) {
     sep_txt(f, '=', 64);
@@ -1146,7 +1280,7 @@ static void prod_ficha_para_txt(FILE *f, const Produto *p) {
     sep_txt(f, '=', 64);
     fputc('\n', f);
 }
- 
+
 void exportar_produtos_txt(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
@@ -1160,17 +1294,17 @@ void exportar_produtos_txt(void) {
     printf(" Opcao: ");
     int op; scanf("%d", &op); limpar_buffer();
     if (op == 0) return;
- 
+
     FILE *dat = fopen(ARQ_PRODUTOS, "rb");
     if (!dat) {
         printf("\n Nenhum registro encontrado. Cadastre produtos primeiro.\n");
         pausar(); return;
     }
- 
+
     char nome_saida[80];
     strcpy(nome_saida, ARQ_PROD_TXT);
     char agora[20]; data_hoje(agora);
- 
+
     /* ---- Opção 1: ficha individual ---- */
     if (op == 1) {
         printf(" Codigo do produto: "); int cod; scanf("%d", &cod); limpar_buffer();
@@ -1179,7 +1313,7 @@ void exportar_produtos_txt(void) {
             if (p.codigo == cod) { prod_classificar(&p); achou = 1; break; }
         fclose(dat);
         if (!achou) { printf("\n Produto nao encontrado.\n"); pausar(); return; }
- 
+
         sprintf(nome_saida, "ficha_prod_%03d.txt", p.codigo);
         FILE *txt = fopen(nome_saida, "w");
         if (!txt) { printf("\n ERRO ao criar arquivo!\n"); pausar(); return; }
@@ -1190,11 +1324,11 @@ void exportar_produtos_txt(void) {
         printf("\n " GREEN "Arquivo gerado: %s" RESET "\n", nome_saida);
         pausar(); return;
     }
- 
+
     /* ---- Opções 2 e 3: todos os registros ---- */
     FILE *txt = fopen(nome_saida, "w");
     if (!txt) { fclose(dat); printf("\n ERRO ao criar arquivo!\n"); pausar(); return; }
- 
+
     /* ---- Opção 2: lista em tabela ---- */
     if (op == 2) {
         fprintf(txt, "SISTEMA DE PRODUTOS - MERCADINHO v%s\n", VERSAO);
@@ -1225,7 +1359,7 @@ void exportar_produtos_txt(void) {
         fprintf(txt, " RELATORIO GERENCIAL COMPLETO\n");
         fprintf(txt, " Gerado em: %s\n", agora);
         fprintf(txt, "================================================================\n\n");
- 
+
         int total=0,ativos=0,inativos=0,vencidos=0,criticos=0,atencao_c=0,ok_c=0;
         float v_custo=0.0f, v_venda=0.0f;
         Produto p;
@@ -1259,12 +1393,12 @@ void exportar_produtos_txt(void) {
             prod_ficha_para_txt(txt, &p);
         }
     }
- 
+
     fclose(dat); fclose(txt);
     printf("\n " GREEN "Arquivo gerado: %s" RESET "\n", nome_saida);
     pausar();
 }
- 
+
 void consultar_historico(void) {
     limpar_tela();
     printf("\n ╔═══════════════════════════════════════════════════════════════════╗\n");
@@ -1272,7 +1406,7 @@ void consultar_historico(void) {
     printf(" ╠═════════════════════════╦════════════╦══════════════╦═════════════╣\n");
     printf(" ║ Data / Hora             ║ Cód. Prod. ║ Ação         ║ Quantidade  ║\n");
     printf(" ╠═════════════════════════╬════════════╬══════════════╬═════════════╣\n");
- 
+
     FILE *f = fopen(ARQ_HIST, "rb");
     if (!f) {
         printf(" ║ Nenhuma movimentação registrada ainda.                           ║\n");
@@ -1290,11 +1424,11 @@ void consultar_historico(void) {
     printf(" Total de movimentações: %d\n", count);
     pausar();
 }
- 
+
 /* ============================================================
  *  MÓDULO PEDIDO (PONTO DE VENDA)
  * ============================================================ */
- 
+
 int ped_proximo_numero(void) {
     FILE *f = fopen(ARQ_PEDIDOS, "rb");
     if (!f) return 1;
@@ -1304,7 +1438,7 @@ int ped_proximo_numero(void) {
     fclose(f);
     return max + 1;
 }
- 
+
 void imprimir_cupom(const Pedido *ped) {
     printf("\n ========================================\n");
     printf("       MERCADINHO DO PORTO\n");
@@ -1330,13 +1464,13 @@ void imprimir_cupom(const Pedido *ped) {
     printf("        Obrigado pela preferência!\n");
     printf(" ========================================\n\n");
 }
- 
+
 void realizar_venda(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║         PONTO DE VENDA                   ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
- 
+
     Pedido ped;
     memset(&ped, 0, sizeof(Pedido));
     ped.numero      = ped_proximo_numero();
@@ -1344,23 +1478,28 @@ void realizar_venda(void) {
     ped.total       = 0.0f;
     ped.status      = 1;
     data_hora_agora(ped.data_hora);
- 
+
     /* Identifica cliente (opcional) */
     printf(" Código do cliente (0 para venda sem cadastro): ");
     int cod_cli; scanf("%d", &cod_cli); limpar_buffer();
     if (cod_cli > 0) {
         Cliente c;
         if (cli_buscar_por_codigo(cod_cli, &c)) {
+            if (!c.ativo) {
+                printf("\n " RED "[BLOQUEADO] Cliente INATIVO nao pode realizar compras!" RESET "\n");
+                printf(" Ative o cliente antes de continuar.\n");
+                pausar(); return;
+            }
             ped.codigo_cliente = cod_cli;
             strncpy(ped.nome_cliente, c.nome, MAX_NOME_CLI - 1);
         } else {
-            printf(" Cliente não encontrado. Continuando sem cadastro.\n");
+            printf(" Cliente nao encontrado. Continuando sem cadastro.\n");
             strcpy(ped.nome_cliente, "CONSUMIDOR FINAL");
         }
     } else {
         strcpy(ped.nome_cliente, "CONSUMIDOR FINAL");
     }
- 
+
     /* Adiciona itens */
     int continuar = 1;
     while (continuar && ped.total_itens < MAX_ITENS_PEDIDO) {
@@ -1368,32 +1507,32 @@ void realizar_venda(void) {
         printf(" Código do produto (0 para finalizar): ");
         int cod_prod; scanf("%d", &cod_prod); limpar_buffer();
         if (cod_prod == 0) break;
- 
+
         Produto prod;
         if (!prod_buscar_por_codigo(cod_prod, &prod)) {
             printf(" Produto não encontrado!\n"); continue;
         }
         if (!prod.ativo) { printf(" Produto inativo!\n"); continue; }
         if (prod.quantidade == 0) { printf(" Sem estoque!\n"); continue; }
- 
+
         printf(" Produto: %s | Estoque: %d | Preço: R$ %.2f\n",
                prod.nome, prod.quantidade, prod.preco_venda);
-        printf(" Quantidade: "); int qtd; scanf("%d", &qtd); limpar_buffer();
- 
+        int qtd = ler_inteiro_positivo(" Quantidade (> 0): ");
+
         if (qtd <= 0 || qtd > prod.quantidade) {
-            printf(" Quantidade inválida ou maior que o estoque!\n"); continue;
+            printf(" Quantidade invalida ou maior que o estoque!\n"); continue;
         }
- 
+
         ItemPedido *item = &ped.itens[ped.total_itens];
         item->codigo_produto = cod_prod;
         strncpy(item->nome_produto, prod.nome, MAX_NOME_PROD - 1);
         item->quantidade     = qtd;
         item->preco_unitario = prod.preco_venda;
         item->subtotal       = qtd * prod.preco_venda;
- 
+
         ped.total += item->subtotal;
         ped.total_itens++;
- 
+
         /* Atualiza estoque imediatamente */
         prod.quantidade -= qtd;
         FILE *f = fopen(ARQ_PRODUTOS, "r+b");
@@ -1412,16 +1551,18 @@ void realizar_venda(void) {
         printf(" " GREEN "✔ Item adicionado. Subtotal: R$ %.2f" RESET "\n", item->subtotal);
         printf(" Total parcial: R$ %.2f\n", ped.total);
     }
- 
+
     if (ped.total_itens == 0) { printf("\n Nenhum item. Venda cancelada.\n"); pausar(); return; }
- 
+
     /* Desconto */
     printf("\n Total: R$ %.2f\n", ped.total);
-    printf(" Desconto (R$, 0 para nenhum): ");
-    scanf("%f", &ped.desconto); limpar_buffer();
-    if (ped.desconto < 0 || ped.desconto > ped.total) ped.desconto = 0.0f;
+    ped.desconto = ler_float_positivo(" Desconto (R$, 0 para nenhum): ");
+    if (ped.desconto > ped.total) {
+        printf(" Desconto nao pode ser maior que o total! Desconto zerado.\n");
+        ped.desconto = 0.0f;
+    }
     ped.total_final = ped.total - ped.desconto;
- 
+
     /* Pagamento */
     printf(" Forma de pagamento:\n [1] Dinheiro  [2] Cartão Débito  [3] Cartão Crédito  [4] PIX\n Opção: ");
     int pag; scanf("%d", &pag); limpar_buffer();
@@ -1433,15 +1574,15 @@ void realizar_venda(void) {
         default:strcpy(ped.forma_pagamento, "Não informado");  break;
     }
     ped.status = 2;
- 
+
     /* Salva pedido */
     FILE *f = fopen(ARQ_PEDIDOS, "ab");
     if (f) { fwrite(&ped, sizeof(Pedido), 1, f); fclose(f); }
- 
+
     imprimir_cupom(&ped);
     pausar();
 }
- 
+
 void listar_pedidos(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════════════════════════╗\n");
@@ -1449,7 +1590,7 @@ void listar_pedidos(void) {
     printf(" ╠════════╦══════════════════════╦══════════╦═══════════════════╣\n");
     printf(" ║ Nº PED ║ DATA/HORA            ║ TOTAL(R$)║ CLIENTE           ║\n");
     printf(" ╠════════╬══════════════════════╬══════════╬═══════════════════╣\n");
- 
+
     FILE *f = fopen(ARQ_PEDIDOS, "rb");
     if (!f) {
         printf(" ║ Nenhum pedido registrado.                                    ║\n");
@@ -1468,16 +1609,16 @@ void listar_pedidos(void) {
     printf(" Total: %d pedido(s).\n", count);
     pausar();
 }
- 
+
 void relatorio_vendas(void) {
     limpar_tela();
     printf("\n ╔══════════════════════════════════════════╗\n");
     printf(" ║       RELATÓRIO DE VENDAS                ║\n");
     printf(" ╚══════════════════════════════════════════╝\n\n");
- 
+
     FILE *f = fopen(ARQ_PEDIDOS, "rb");
     if (!f) { printf(" Nenhum pedido encontrado.\n"); pausar(); return; }
- 
+
     int total_pedidos = 0, total_itens = 0;
     float total_bruto = 0.0f, total_desconto = 0.0f, total_liquido = 0.0f;
     Pedido p;
@@ -1490,7 +1631,7 @@ void relatorio_vendas(void) {
         total_liquido   += p.total_final;
     }
     fclose(f);
- 
+
     printf(" Pedidos finalizados     : %d\n", total_pedidos);
     printf(" Total de itens vendidos : %d\n", total_itens);
     printf(" Receita bruta (R$)      : %.2f\n", total_bruto);
@@ -1500,11 +1641,11 @@ void relatorio_vendas(void) {
         printf(" Ticket médio (R$)       : %.2f\n", total_liquido / total_pedidos);
     pausar();
 }
- 
+
 /* ============================================================
  *  SUBMENUS
  * ============================================================ */
- 
+
 void submenu_clientes(void) {
     int op;
     do {
@@ -1519,11 +1660,12 @@ void submenu_clientes(void) {
         printf(" ║ [5] Listar todos os clientes             ║\n");
         printf(" ║ [6] Listar apenas ativos                 ║\n");
         printf(" ║ [7] Relatório resumido                   ║\n");
+        printf(" ║ [8] Exportar para TXT                    ║\n");
         printf(" ║ [0] Voltar ao menu principal             ║\n");
         printf(" ╚══════════════════════════════════════════╝\n");
         printf(" Total de clientes: %d\n\n", cli_total_registros());
         printf(" Opção: "); scanf("%d", &op); limpar_buffer();
- 
+
         switch (op) {
             case 1: cadastrar_cliente();     break;
             case 2: consultar_cliente();     break;
@@ -1532,12 +1674,13 @@ void submenu_clientes(void) {
             case 5: listar_clientes(0);      break;
             case 6: listar_clientes(1);      break;
             case 7: relatorio_clientes();    break;
+            case 8: exportar_clientes_txt(); break;
             case 0: break;
             default: printf("\n Opção inválida!\n"); pausar();
         }
     } while (op != 0);
 }
- 
+
 void submenu_estoque(void) {
     int op;
     do {
@@ -1554,27 +1697,29 @@ void submenu_estoque(void) {
         printf(" ║ [7] Listar apenas ativos                 ║\n");
         printf(" ║ [8] Relatório de estoque                 ║\n");
         printf(" ║ [9] Histórico de movimentações           ║\n");
+        printf(" ║ [10] Exportar para TXT                  ║\n");
         printf(" ║ [0] Voltar ao menu principal             ║\n");
         printf(" ╚══════════════════════════════════════════╝\n");
         printf(" Total de produtos: %d\n\n", prod_total_registros());
         printf(" Opção: "); scanf("%d", &op); limpar_buffer();
- 
+
         switch (op) {
-            case 1: cadastrar_produto();    break;
-            case 2: consultar_produto();    break;
-            case 3: editar_produto();       break;
-            case 4: excluir_produto();      break;
-            case 5: movimentar_estoque();   break;
-            case 6: listar_produtos(0);     break;
-            case 7: listar_produtos(1);     break;
-            case 8: relatorio_produtos();   break;
-            case 9: consultar_historico();  break;
+            case 1:  cadastrar_produto();    break;
+            case 2:  consultar_produto();    break;
+            case 3:  editar_produto();       break;
+            case 4:  excluir_produto();      break;
+            case 5:  movimentar_estoque();   break;
+            case 6:  listar_produtos(0);     break;
+            case 7:  listar_produtos(1);     break;
+            case 8:  relatorio_produtos();   break;
+            case 9:  consultar_historico();  break;
+            case 10: exportar_produtos_txt();break;
             case 0: break;
             default: printf("\n Opção inválida!\n"); pausar();
         }
     } while (op != 0);
 }
- 
+
 void submenu_vendas(void) {
     int op;
     do {
@@ -1588,7 +1733,7 @@ void submenu_vendas(void) {
         printf(" ║ [0] Voltar ao menu principal             ║\n");
         printf(" ╚══════════════════════════════════════════╝\n\n");
         printf(" Opção: "); scanf("%d", &op); limpar_buffer();
- 
+
         switch (op) {
             case 1: realizar_venda();   break;
             case 2: listar_pedidos();   break;
@@ -1598,11 +1743,11 @@ void submenu_vendas(void) {
         }
     } while (op != 0);
 }
- 
+
 /* ============================================================
  *  MENU PRINCIPAL
  * ============================================================ */
- 
+
 void menu_principal(void) {
     int escolha;
     do {
@@ -1623,7 +1768,7 @@ void menu_principal(void) {
         printf(" Opção: ");
         scanf("%d", &escolha);
         limpar_buffer();
- 
+
         switch (escolha) {
             case 1: realizar_venda();     break;
             case 2: submenu_estoque();    break;
@@ -1639,14 +1784,13 @@ void menu_principal(void) {
         }
     } while (escolha != 0);
 }
- 
+
 /* ============================================================
  *  MAIN
  * ============================================================ */
- 
+
 int main(void) {
     setlocale(LC_ALL, "Portuguese");
     menu_principal();
     return 0;
 }
- 
