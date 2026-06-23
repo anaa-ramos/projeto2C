@@ -1,0 +1,384 @@
+/* =====================================================
+   LEVAJÁ! — LANDING PAGE DE PARCEIROS
+   Arquivo: style.css
+   Descrição: Estilização completa da landing page,
+   cobrindo Box Model, posicionamento, cores e fontes.
+   ===================================================== */
+
+
+/* ===================== RESET E BASE ===================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #F7F8FA;
+    color: #1A1A2E;
+    line-height: 1.6;
+}
+
+
+/* ===================== CABEÇALHO ===================== */
+.cabecalho {
+    /* Posição relativa necessária para o badge absoluto funcionar */
+    position: relative;
+
+    background-color: #FF6B2C;
+    background-image: linear-gradient(135deg, #FF6B2C 0%, #E84545 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    text-align: center;
+    padding: 40px 20px 32px;
+    overflow: hidden;
+}
+
+/* H1: Nome da plataforma */
+.logo-nome {
+    font-size: 3rem;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+/* Slogan do cabeçalho */
+.logo-slogan {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-style: italic;
+    letter-spacing: 0.5px;
+}
+
+/* ===================== BADGE DE VAGAS (posição absoluta) ===================== */
+/*
+   Elemento fixado no canto superior direito do cabeçalho
+   usando position: absolute + coordenadas top e right.
+   O pai (.cabecalho) tem position: relative para servir de âncora.
+*/
+.badge-vagas {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+
+    background-color: #FFDE59;
+    color: #1A1A2E;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    /* Box Model: padding interno + borda arredondada */
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+
+    /* Sombra para destacar o badge */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+
+/* ===================== HERO ===================== */
+.hero {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E8E8E8;
+    padding: 56px 20px;
+}
+
+.hero-conteudo {
+    /* Largura máxima para não espalhar na tela */
+    width: 100%;
+    max-width: 860px;
+
+    /* Centralização com margin automática */
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.hero-imagem {
+    width: 340px;
+    min-width: 260px;
+    border-radius: 16px;
+    object-fit: cover;
+    height: 320px;
+
+    /* Borda e sombra como parte do Box Model visual */
+    border: 3px solid #FF6B2C;
+    box-shadow: 0 8px 28px rgba(255, 107, 44, 0.22);
+}
+
+.hero-texto {
+    flex: 1;
+}
+
+.hero-titulo {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1A1A2E;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.hero-descricao-curta {
+    font-size: 1.05rem;
+    color: #555;
+    margin-bottom: 28px;
+}
+
+
+/* ===================== BOTÃO DE CADASTRO ===================== */
+/*
+   Classe .btn-cadastro diferencia links de ação visual
+   dos links simples de navegação (como .link-rodape).
+   Baseado na diferenciação via seletor de classe (ponto ".").
+*/
+.btn-cadastro {
+    display: inline-block;
+    background-color: #FF6B2C;
+    color: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 700;
+
+    /* text-transform: uppercase para botões de destaque */
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    letter-spacing: 0.8px;
+
+    /* Box Model: padding define a "caixa" do botão */
+    padding: 14px 32px;
+    border-radius: 8px;
+
+    /* Borda + sombra para profundidade */
+    border: 2px solid transparent;
+    box-shadow: 0 4px 16px rgba(255, 107, 44, 0.35);
+
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-cadastro:hover {
+    background-color: #E84545;
+    transform: translateY(-2px);
+}
+
+
+/* ===================== SOBRE ===================== */
+.sobre {
+    background-color: #F7F8FA;
+    padding: 56px 20px;
+}
+
+.container {
+    /* Largura controlada para manter leitura confortável */
+    width: 100%;
+    max-width: 800px;
+
+    /* Centralização horizontal via margin automática */
+    margin: 0 auto;
+}
+
+.secao-titulo {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #1A1A2E;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+
+    /* Borda inferior como separador visual (parte do Box Model) */
+    border-bottom: 3px solid #FF6B2C;
+}
+
+.sobre-texto {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.8;
+    text-align: justify;
+}
+
+
+/* ===================== BENEFÍCIOS ===================== */
+.beneficios {
+    background-color: #FFFFFF;
+    padding: 56px 20px;
+    border-top: 1px solid #EBEBEB;
+    border-bottom: 1px solid #EBEBEB;
+}
+
+/* Lista <ul> de benefícios — sem bullets padrão */
+.lista-beneficios {
+    list-style: none;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* Cada <li> do benefício */
+.beneficio-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+
+    /* Box Model: padding interno e margem inferior entre itens */
+    padding: 18px 0;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+.beneficio-item:last-child {
+    border-bottom: none;
+}
+
+.beneficio-icone {
+    font-size: 1.8rem;
+    min-width: 40px;
+    text-align: center;
+
+    /* Margin top para alinhar com a primeira linha do texto */
+    margin-top: 2px;
+}
+
+.beneficio-item strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1A1A2E;
+    margin-bottom: 4px;
+}
+
+.beneficio-item p {
+    font-size: 0.92rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+
+/* ===================== FORMULÁRIO ===================== */
+.secao-formulario {
+    background-color: #1A1A2E;
+    background-image: linear-gradient(160deg, #1A1A2E 0%, #2B2D42 100%);
+    background-repeat: no-repeat;
+    padding: 64px 20px;
+}
+
+/* Título claro para fundos escuros */
+.secao-titulo.claro {
+    color: #FFFFFF;
+    border-bottom-color: #FF6B2C;
+}
+
+.formulario-subtitulo {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.98rem;
+    margin-bottom: 36px;
+}
+
+/* Caixa branca do formulário — largura controlada */
+.form-wrapper {
+    width: 100%;
+    max-width: 520px;
+
+    background-color: #FFFFFF;
+
+    /* Box Model completo: padding + border + margin centralizadora */
+    padding: 36px 40px;
+    border-radius: 12px;
+    border: 1px solid #E0E0E0;
+    margin: 0 auto;
+
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Agrupamento de cada campo do formulário */
+.campo-grupo {
+    /* Margem inferior entre campos — Box Model */
+    margin-bottom: 20px;
+}
+
+.campo-grupo label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    /* Espaçamento inferior entre label e input */
+    margin-bottom: 6px;
+}
+
+.campo-grupo input {
+    width: 100%;
+    font-size: 0.97rem;
+    color: #1A1A2E;
+    background-color: #F9F9F9;
+
+    /* Box Model: padding interno do campo + borda */
+    padding: 12px 14px;
+    border: 1.5px solid #DCDCDC;
+    border-radius: 6px;
+
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.campo-grupo input:focus {
+    border-color: #FF6B2C;
+    background-color: #FFF8F5;
+}
+
+/* Botão de cadastro dentro do formulário com largura total */
+.btn-formulario {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+
+    /* Padding generoso para destaque */
+    padding: 15px 0;
+    font-size: 1rem;
+}
+
+
+/* ===================== RODAPÉ ===================== */
+.rodape {
+    background-color: #111122;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: center;
+    font-size: 0.85rem;
+
+    /* Box Model: padding interno do rodapé */
+    padding: 28px 20px;
+}
+
+.rodape-links {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+/*
+   Classe .link-rodape: links simples de navegação no rodapé.
+   Diferenciados dos .btn-cadastro pelo seletor de classe (.)
+   — sem background, apenas cor e sublinhado.
+*/
+.link-rodape {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-size: 0.82rem;
+    transition: color 0.2s;
+}
+
+.link-rodape:hover {
+    color: #FF6B2C;
+    text-decoration: underline;
+}
+/* ===================== FIM DO ARQUIVO style.css ===================== */
