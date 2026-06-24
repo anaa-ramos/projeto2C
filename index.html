@@ -9,23 +9,27 @@
 </head>
 <body>
 
-    <!-- ===================== CABEÇALHO ===================== -->
+    <!-- ========== CABEÇALHO ==========  -->
     <header class="cabecalho">
 
         <!-- H1: Nome e slogan da plataforma -->
         <h1 class="logo-nome">LevaJá!</h1>
         <p class="logo-slogan">A entrega que chega antes do previsto.</p>
 
+    <!-- Selo destacando que existem vagas abertas -->
+<div class="badge-vagas">Vagas Abertas</div>
+
+</header>
     </header>
-    <!-- ===================== FIM CABEÇALHO ===================== -->
+    <!-- ========== FIM CABEÇALHO ========== -->
 
 
-    <!-- ========= Sobre a empresa ========= -->
+    <!-- ========== Sobre a empresa ========== -->
     <section class="sobre">
         <div class="container">
             <h2 class="secao-titulo">Sobre a LevaJá</h2>
 
-            <!-- Imagem com float: a imagem "flutua" à esquerda e o texto envolve -->
+            <!-- Imagem utilizada para representar os entregadores parceiros -->
             <img
                 src="imagens/entregador.jpg"
                 alt="Entregador parceiro da LevaJá"
@@ -39,7 +43,7 @@
                 com o melhor retorno financeiro para quem pedala ou pilota com a gente.
             </p>
 
-            <!-- Clearfix: encerra o float para que a seção seguinte não seja afetada -->
+            <!-- Organiza corretamente o conteúdo após a imagem -->
             <div class="clearfix"></div>
         </div>
     </section>
@@ -51,7 +55,7 @@
         <div class="container">
             <h2 class="secao-titulo">Por quê se juntar com a LevaJá?</h2>
 
-            <!-- Lista não-ordenada de benefícios -->
+            <!-- Lista com as principais vantagens para os entregadores -->
             <ul class="lista-beneficios">
                 <li class="beneficio-item">
                     <div><strong>Flexibilidade total de horário</strong></div>
@@ -80,7 +84,7 @@
             <h2 class="secao-titulo claro">Pronto para começar?</h2>
             <p class="formulario-subtitulo">Preencha seus dados e entraremos em contato em até 24 horas.</p>
 
-            <!-- Formulário de captura de novos entregadores parceiros -->
+            <!-- Área onde o candidato informa seus dados para cadastro -->
             <div class="form-wrapper">
                 <div class="campo-grupo">
                     <label for="nome">Nome completo</label>
@@ -102,7 +106,7 @@
                     <input type="date" id="nascimento" name="nascimento" required>
                 </div>
 
-                <!-- Link de cadastro / conversão principal -->
+                <!-- Botão principal para realizar o cadastro -->
                 <a href="#obrigado" class="btn-cadastro btn-formulario">Cadastrar agora</a>
             </div>
         </div>
