@@ -1,12 +1,12 @@
 /* =====================================================
-   LEVAJÁ! — LANDING PAGE DE PARCEIROS
-   Arquivo: style.css
-   Descrição: Estilização completa da landing page,
-   cobrindo Box Model, posicionamento, cores e fontes.
+   Projeto LevaJá
+   Arquivo responsável pela aparência da página.
+   Aqui estão as cores, fontes, espaçamentos
+   e demais estilos utilizados no site.
    ===================================================== */
 
 
-/* ===================== RESET E BASE ===================== */
+/* ========== RESET E BASE ========== */
 * {
     margin: 0;
     padding: 0;
@@ -21,7 +21,7 @@ body {
 }
 
 
-/* ===================== CABEÇALHO ===================== */
+/* ========== CABEÇALHO ========== */
 .cabecalho {
     /* Posição relativa necessária para o badge absoluto funcionar */
     position: relative;
@@ -56,7 +56,7 @@ body {
 }
 
 
-/* ===================== SOBRE ===================== */
+/* =========== SOBRE ========== */
 .sobre {
     background-color: #F0F5FC;
     padding: 56px 20px;
@@ -64,11 +64,11 @@ body {
 }
 
 .container {
-    /* Largura controlada para manter leitura confortável */
+    /* Define uma largura máxima para o conteúdo não ficar espalhado */
     width: 100%;
     max-width: 800px;
 
-    /* Centralização horizontal via margin automática */
+    /* Centraliza o conteúdo no meio da página */
     margin: 0 auto;
 }
 
@@ -79,18 +79,14 @@ body {
     margin-bottom: 20px;
     padding-bottom: 10px;
 
-    /* Borda inferior azulada como separador visual (parte do Box Model) */
+    /* Linha usada para destacar o título da seção */
     border-bottom: 3px solid #3A7BD5;
 }
 
-/* ===================== IMAGEM COM FLOAT ===================== */
-/*
-   float: left faz a imagem "flutuar" à esquerda,
-   permitindo que o texto da seção envolva a imagem
-   pelo lado direito — efeito idêntico ao da foto de referência.
-   margin-right e margin-bottom criam o respiro entre
-   a imagem e o texto ao redor (Box Model).
-*/
+/* ========== IMAGEM COM FLOAT ========== */
+/* A imagem fica posicionada à esquerda e o texto
+   ocupa o espaço ao lado dela.*/
+
 .hero-imagem {
     float: left;
 
@@ -99,11 +95,11 @@ body {
     object-fit: cover;
     border-radius: 12px;
 
-    /* Espaçamento entre a imagem e o texto que a envolve */
+    /* Espaço entre a imagem e o texto */
     margin-right: 24px;
     margin-bottom: 12px;
 
-    /* Borda em tom azulado combinando com a paleta da imagem */
+    /* Borda decorativa da imagem */
     border: 3px solid #5A8FC4;
     box-shadow: 0 6px 20px rgba(27, 79, 155, 0.20);
 }
@@ -123,12 +119,9 @@ body {
 }
 
 
-/* ===================== BOTÃO DE CADASTRO ===================== */
-/*
-   Classe .btn-cadastro diferencia links de ação visual
-   dos links simples de navegação (como .link-rodape).
-   Baseado na diferenciação via seletor de classe (ponto ".").
-*/
+/* ========== BOTÃO DE CADASTRO ========== */
+
+/*Estilo utilizado para os botões principais da página.*/
 .btn-cadastro {
     display: inline-block;
     background-color: #1B4F9B;
@@ -136,13 +129,13 @@ body {
     font-size: 1rem;
     font-weight: 700;
 
-    /* text-transform: uppercase para botões de destaque */
+    /* Deixa o texto do botão em letras maiúsculas */
     text-transform: uppercase;
     text-align: center;
     text-decoration: none;
     letter-spacing: 0.8px;
 
-    /* Box Model: padding define a "caixa" do botão */
+    /* Espaçamento interno do botão */
     padding: 14px 32px;
     border-radius: 8px;
 
@@ -159,7 +152,7 @@ body {
 }
 
 
-/* ===================== BENEFÍCIOS ===================== */
+/* ========== BENEFÍCIOS ========== */
 .beneficios {
     background-color: #FFFFFF;
     padding: 56px 20px;
@@ -167,7 +160,7 @@ body {
     border-bottom: 2px solid #A8C4E8;
 }
 
-/* Lista <ul> de benefícios — sem bullets padrão */
+/* Remove os marcadores padrão da lista */
 .lista-beneficios {
     list-style: none;
     margin-top: 12px;
@@ -176,7 +169,7 @@ body {
     gap: 0;
 }
 
-/* Cada <li> do benefício com "–" antes via ::before */
+/* Estilo aplicado em cada benefício da lista */
 .beneficio-item {
     display: flex;
     align-items: flex-start;
@@ -191,7 +184,7 @@ body {
     border-bottom: none;
 }
 
-/* Traço "–" inserido via CSS antes de cada item */
+/* Adiciona um traço antes de cada benefício */
 .beneficio-item::before {
     content: "–";
     color: #3A7BD5;
@@ -216,7 +209,7 @@ body {
 }
 
 
-/* ===================== FORMULÁRIO ===================== */
+/* ========== FORMULÁRIO ========== */
 .secao-formulario {
     background-color: #0D2F6E;
     background-image: linear-gradient(160deg, #0D2F6E 0%, #1B4F9B 100%);
@@ -224,7 +217,7 @@ body {
     padding: 64px 20px;
 }
 
-/* Título claro para fundos escuros */
+/* Cor branca para melhorar a leitura no fundo azul */
 .secao-titulo.claro {
     color: #FFFFFF;
     border-bottom-color: #5A8FC4;
@@ -236,14 +229,14 @@ body {
     margin-bottom: 36px;
 }
 
-/* Caixa branca do formulário — largura controlada */
+/* Caixa principal onde ficam os campos do formulário */
 .form-wrapper {
     width: 100%;
     max-width: 520px;
 
     background-color: #FFFFFF;
 
-    /* Box Model completo: padding + border + margin centralizadora */
+    /* Espaçamento interno, borda e centralização do formulário */
     padding: 36px 40px;
     border-radius: 12px;
     border: 1px solid #A8C4E8;
@@ -252,9 +245,9 @@ body {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
-/* Agrupamento de cada campo do formulário */
+/* Organização dos campos do formulário */
 .campo-grupo {
-    /* Margem inferior entre campos — Box Model */
+    /* Espaço entre os campos */
     margin-bottom: 20px;
 }
 
@@ -266,7 +259,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 
-    /* Espaçamento inferior entre label e input */
+    /* Espaço entre o texto e o campo */
     margin-bottom: 6px;
 }
 
@@ -276,7 +269,7 @@ body {
     color: #1A1A2E;
     background-color: #F4F8FD;
 
-    /* Box Model: padding interno do campo + borda */
+    /* Espaçamento interno e borda do campo */
     padding: 12px 14px;
     border: 1.5px solid #A8C4E8;
     border-radius: 6px;
@@ -302,7 +295,7 @@ body {
 }
 
 
-/* ===================== RODAPÉ ===================== */
+/* ========== RODAPÉ ========== */
 .rodape {
     background-color: #0A1F4A;
     color: rgba(200, 220, 245, 0.75);
@@ -321,11 +314,7 @@ body {
     flex-wrap: wrap;
 }
 
-/*
-   Classe .link-rodape: links simples de navegação no rodapé.
-   Diferenciados dos .btn-cadastro pelo seletor de classe (.)
-   — sem background, apenas cor e sublinhado.
-*/
+/* Estilo dos links que aparecem no rodapé.*/
 .link-rodape {
     color: rgba(168, 196, 232, 0.85);
     text-decoration: none;
@@ -337,4 +326,19 @@ body {
     color: #FFFFFF;
     text-decoration: underline;
 }
-/* ===================== FIM DO ARQUIVO style.css ===================== */
+.badge-vagas {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+
+    background-color: #FFD700;
+    color: #1A1A2E;
+
+    padding: 8px 14px;
+    border-radius: 20px;
+
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+/* ========== FIM DO ARQUIVO style.css ========== */
+
